@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+      "target": "ES6",
+      "module": "CommonJS",
+      "strict": true,
+      "jsx": "react-jsx", // Use "react" for React 16 and below
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "outDir": "./dist",
+      "moduleResolution": "node"
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules"]
+  }
+  
