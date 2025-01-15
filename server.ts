@@ -4,7 +4,7 @@ import cors from "cors";
 import sqlite3 from "sqlite3";
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(bodyParser.json());
@@ -26,7 +26,8 @@ const db = new sqlite3.Database("./database.sqlite", (err) => {
           type_name TEXT NOT NULL,
           type_code TEXT NOT NULL,
           serial_code TEXT NOT NULL,
-          barcode TEXT NOT NULL
+          barcode TEXT NOT NULL,
+          status TEXT DEFAULT 'available'
         )`,
         (err) => {
           if (err) {
@@ -81,7 +82,28 @@ const db = new sqlite3.Database("./database.sqlite", (err) => {
 
 // Fetch all items
 app.get("/api/items", (req: Request, res: Response) => {
-  db.all("SELECT * FROM items", [], (err, rows) => {
+  const query = `
+    SELECT items.*,
+           CASE
+             WHEN EXISTS (
+               SELECT 1
+               FROM actions
+               WHERE actions.item_id = items.id
+                 AND actions.action_type = 'borrow'
+                 AND NOT EXISTS (
+                   SELECT 1
+                   FROM actions AS return_actions
+                   WHERE return_actions.item_id = items.id
+                     AND return_actions.action_type = 'return'
+                     AND return_actions.timestamp > actions.timestamp
+                 )
+             ) THEN 'borrowed'
+             ELSE 'available'
+           END AS status
+    FROM items
+  `;
+
+  db.all(query, [], (err, rows) => {
     if (err) {
       console.error("Error fetching items:", err.message);
       res.status(500).send("Internal server error");
@@ -91,27 +113,40 @@ app.get("/api/items", (req: Request, res: Response) => {
   });
 });
 
+
+
+
 // Add a new item
 app.post("/api/items", (req: Request, res: Response) => {
   const { type_name, type_code, serial_code, barcode } = req.body;
 
   if (!type_name || !type_code || !serial_code || !barcode) {
-    return res.status(400).send("Missing required fields: type_name, type_code, serial_code, barcode");
+    return res.status(400).send("Missing required fields.");
   }
 
+  const defaultStatus = "available"; // Default status
+
   db.run(
-    "INSERT INTO items (type_name, type_code, serial_code, barcode) VALUES (?, ?, ?, ?)",
-    [type_name, type_code, serial_code, barcode],
+    "INSERT INTO items (type_name, type_code, serial_code, barcode, status) VALUES (?, ?, ?, ?, ?)",
+    [type_name, type_code, serial_code, barcode, defaultStatus],
     function (err) {
       if (err) {
         console.error("Error adding item:", err.message);
         res.status(500).send("Internal server error");
       } else {
-        res.status(201).json({ id: this.lastID, type_name, type_code, serial_code, barcode });
+        res.status(201).json({
+          id: this.lastID,
+          type_name,
+          type_code,
+          serial_code,
+          barcode,
+          status: defaultStatus,
+        });
       }
     }
   );
 });
+
 
 // Delete an item by type_code
 app.delete("/api/items/:type_code", (req: Request, res: Response) => {
@@ -133,15 +168,28 @@ app.delete("/api/items/:type_code", (req: Request, res: Response) => {
 
 // Fetch all users
 app.get("/api/users", (req: Request, res: Response) => {
-  db.all("SELECT * FROM users", [], (err, rows) => {
+  const query = `
+    SELECT 
+      users.id, 
+      users.name, 
+      users.permission, 
+      GROUP_CONCAT(items.type_name) AS borrowed_items
+    FROM users
+    LEFT JOIN actions ON users.id = actions.user_id AND actions.action_type = 'borrow'
+    LEFT JOIN items ON actions.item_id = items.id
+    GROUP BY users.id
+  `;
+
+  db.all(query, [], (err, rows) => {
     if (err) {
-      console.error("Error fetching users:", err.message);
+      console.error("Error fetching users with borrowed items:", err.message);
       res.status(500).send("Internal server error");
     } else {
       res.json(rows);
     }
   });
 });
+
 
 // Add a new user
 app.post("/api/users", (req: Request, res: Response) => {
@@ -187,7 +235,16 @@ app.delete("/api/users/:id", (req: Request, res: Response) => {
 
 // Fetch all actions
 app.get("/api/actions", (req: Request, res: Response) => {
-  db.all("SELECT * FROM actions", [], (err, rows) => {
+  const query = `
+    SELECT actions.id, actions.action_type, actions.timestamp,
+           users.name AS user_name,
+           items.type_name AS item_name
+    FROM actions
+    JOIN users ON actions.user_id = users.id
+    JOIN items ON actions.item_id = items.id
+  `;
+
+  db.all(query, [], (err, rows) => {
     if (err) {
       console.error("Error fetching actions:", err.message);
       res.status(500).send("Internal server error");
@@ -197,12 +254,13 @@ app.get("/api/actions", (req: Request, res: Response) => {
   });
 });
 
+
 // Add a new action
 app.post("/api/actions", (req: Request, res: Response) => {
   const { user_id, item_id, action_type } = req.body;
 
   if (!user_id || !item_id || !action_type) {
-    return res.status(400).send("Missing required fields: user_id, item_id, action_type");
+    return res.status(400).send("Missing required fields.");
   }
 
   const timestamp = new Date().toISOString();
@@ -215,11 +273,26 @@ app.post("/api/actions", (req: Request, res: Response) => {
         console.error("Error adding action:", err.message);
         res.status(500).send("Internal server error");
       } else {
-        res.status(201).json({ id: this.lastID, user_id, item_id, action_type, timestamp });
+        // Update item status based on action type
+        const newStatus = action_type === "borrow" ? "borrowed" : "available";
+
+        db.run(
+          "UPDATE items SET status = ? WHERE id = ?",
+          [newStatus, item_id],
+          (updateErr) => {
+            if (updateErr) {
+              console.error("Error updating item status:", updateErr.message);
+              res.status(500).send("Internal server error");
+            } else {
+              res.status(201).json({ id: this.lastID, user_id, item_id, action_type, timestamp });
+            }
+          }
+        );
       }
     }
   );
 });
+
 
 // Delete an action by ID
 app.delete("/api/actions/:id", (req: Request, res: Response) => {
@@ -238,6 +311,47 @@ app.delete("/api/actions/:id", (req: Request, res: Response) => {
     }
   });
 });
+
+/* --------------------- Barcod Management --------------------- */
+
+app.post("/api/items/scan", (req: Request, res: Response) => {
+  const { barcode } = req.body;
+
+  if (!barcode) {
+    return res.status(400).json({ message: "Barcode is required." });
+  }
+
+  // בדיקה אם הפריט זמין
+  db.get(
+    "SELECT * FROM items WHERE barcode = ? AND status = 'available'",
+    [barcode],
+    (err, row) => {
+      if (err) {
+        console.error("Error scanning barcode:", err.message);
+        return res.status(500).json({ message: "Internal server error." });
+      }
+
+      if (!row) {
+        return res.status(404).json({ message: "Item not available or not found." });
+      }
+
+      // עדכון סטטוס הפריט ל"מושאל"
+      db.run(
+        "UPDATE items SET status = 'borrowed' WHERE barcode = ?",
+        [barcode],
+        (updateErr) => {
+          if (updateErr) {
+            console.error("Error updating item status:", updateErr.message);
+            return res.status(500).json({ message: "Failed to update item status." });
+          }
+
+          res.status(200).json({ message: `Item with barcode ${barcode} borrowed successfully.` });
+        }
+      );
+    }
+  );
+});
+
 
 /* --------------------- Start the Server --------------------- */
 app.listen(port, () => {

@@ -129,6 +129,7 @@ const ItemsApp: React.FC = () => {
             <th>Type Code</th>
             <th>Serial Code</th>
             <th>Barcode</th>
+            <th>Status</th> 
             <th>Actions</th>
           </tr>
         </thead>
@@ -139,6 +140,7 @@ const ItemsApp: React.FC = () => {
               <td>{item.type_code}</td>
               <td>{item.serial_code}</td>
               <td>{item.barcode}</td>
+              <td>{item.status}</td> 
               <td>
                 <button onClick={() => handleEditItem(index)} className="button">
                   Edit

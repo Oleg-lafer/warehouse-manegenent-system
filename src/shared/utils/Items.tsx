@@ -3,12 +3,14 @@ class Item {
   type_code: string;
   serial_code: string;
   barcode: string;
+  status: string;
 
   constructor(type_name: string, type_code: string, serial_code: string, barcode: string) {
     this.type_name = type_name;
     this.type_code = type_code;
     this.serial_code = serial_code;
     this.barcode = barcode;
+    this.status = "available";
   }
 
   /**

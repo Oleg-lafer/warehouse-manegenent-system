@@ -4,10 +4,10 @@ import "react-toastify/dist/ReactToastify.css";
 import "./Admin.css";
 
 interface User {
-  id?: number; // Added `id` to handle deletion and updates properly
-  name: string;
-  permission: string;
-  borrowedItems: string;
+  id?: number; // ID של המשתמש לשם עריכה ומחיקה
+  name: string; // שם המשתמש
+  permission: string; // הרשאת המשתמש (Admin, User וכו')
+  borrowedItems: string; // רשימת פריטים מושאלים
 }
 
 const UsersApp: React.FC = () => {
@@ -21,7 +21,7 @@ const UsersApp: React.FC = () => {
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Fetch users from the server
+  // שליפת נתוני המשתמשים מהשרת
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -31,7 +31,16 @@ const UsersApp: React.FC = () => {
     try {
       const response = await fetch("http://localhost:5000/api/users");
       const data = await response.json();
-      setUsers(data);
+
+      // מיפוי השדה borrowed_items ל-borrowedItems
+      const normalizedUsers = data.map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        permission: user.permission,
+        borrowedItems: user.borrowed_items || "none", // ברירת מחדל אם אין פריטים מושאלים
+      }));
+
+      setUsers(normalizedUsers);
     } catch (error) {
       toast.error("Failed to fetch users.");
     } finally {
@@ -183,7 +192,7 @@ const UsersApp: React.FC = () => {
             <tr key={user.id}>
               <td>{user.name}</td>
               <td>{user.permission}</td>
-              <td>{user.borrowedItems}</td>
+              <td>{user.borrowedItems}</td> {/* מציג את הפריטים המושאלים */}
               <td>
                 <button onClick={() => setEditIndex(index)} className="button">
                   Edit

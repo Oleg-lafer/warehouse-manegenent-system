@@ -1,13 +1,25 @@
 import axios from "axios";
 
 interface User {
-  id?: number;
+  id: number;
   name: string;
-  email: string;
-  // Add other fields as necessary
+  permission: string;
+  borrowed_items: string | null; 
 }
 
+
 const BASE_URL = "http://localhost:5000/api/users";
+
+export const fetchUsers = async (): Promise<any[]> => {
+  try {
+    // Sending a GET request to the backend to retrieve all users
+    const response = await axios.get("http://localhost:5000/api/users");
+    return response.data; // Returning the data received from the backend
+  } catch (error) {
+    console.error("Error fetching users:", error); // Log any error that occurs
+    throw new Error("Failed to fetch users."); // Rethrow an error for the caller
+  }
+};
 
 const usersAPI = {
   fetchUsers: async () => {

@@ -2,39 +2,103 @@ import React, { useState } from "react";
 import ItemsApp from "./admin/ItemsApp";
 import UsersApp from "./admin/UsersApp";
 import ActionsApp from "./admin/ActionsApp";
-
+import UserDashboard from "./user/UserApp";
 
 function App() {
-  const [activePage, setActivePage] = useState("Items"); // דף פעיל
+  const [activeRole, setActiveRole] = useState("Admin"); // תפקיד פעיל (מנהל או משתמש)
+  const [activePage, setActivePage] = useState("Items"); // דף פעיל עבור מנהל
 
   const renderPage = () => {
-    switch (activePage) {
-      case "Items":
-        return <ItemsApp />;
-      case "Users":
-        return <UsersApp />;
-      case "Actions":
-        return <ActionsApp />;
-      default:
-        return <ItemsApp />;
+    if (activeRole === "Admin") {
+      // ממשק המנהל
+      switch (activePage) {
+        case "Items":
+          return <ItemsApp />;
+        case "Users":
+          return <UsersApp />;
+        case "Actions":
+          return <ActionsApp />;
+        default:
+          return <ItemsApp />;
+      }
+    } else {
+      // ממשק המשתמש
+      return <UserDashboard />;
     }
   };
 
   return (
     <div>
       <h1>Automated Warehouse System</h1>
-      {/* תפריט ניווט */}
-      <nav style={{ display: "flex", gap: "20px", padding: "10px", backgroundColor: "#f4f4f4" }}>
-        <button className="button" onClick={() => setActivePage("Items")}>
-          Items
+
+      {/* תפריט תפקיד */}
+      <nav
+        style={{
+          display: "flex",
+          gap: "20px",
+          padding: "10px",
+          backgroundColor: "#e8e8e8",
+        }}
+      >
+        <button
+          className="button"
+          onClick={() => setActiveRole("Admin")}
+          style={{
+            fontWeight: activeRole === "Admin" ? "bold" : "normal",
+          }}
+        >
+          Admin Panel
         </button>
-        <button className="button" onClick={() => setActivePage("Users")}>
-          Users
-        </button>
-        <button className="button" onClick={() => setActivePage("Actions")}>
-          Actions
+        <button
+          className="button"
+          onClick={() => setActiveRole("User")}
+          style={{
+            fontWeight: activeRole === "User" ? "bold" : "normal",
+          }}
+        >
+          User Interface
         </button>
       </nav>
+
+      {activeRole === "Admin" && (
+        // תפריט ניווט למנהל
+        <nav
+          style={{
+            display: "flex",
+            gap: "20px",
+            padding: "10px",
+            backgroundColor: "#f4f4f4",
+          }}
+        >
+          <button
+            className="button"
+            onClick={() => setActivePage("Items")}
+            style={{
+              fontWeight: activePage === "Items" ? "bold" : "normal",
+            }}
+          >
+            Items
+          </button>
+          <button
+            className="button"
+            onClick={() => setActivePage("Users")}
+            style={{
+              fontWeight: activePage === "Users" ? "bold" : "normal",
+            }}
+          >
+            Users
+          </button>
+          <button
+            className="button"
+            onClick={() => setActivePage("Actions")}
+            style={{
+              fontWeight: activePage === "Actions" ? "bold" : "normal",
+            }}
+          >
+            Actions
+          </button>
+        </nav>
+      )}
 
       {/* תוכן הדף */}
       <div>{renderPage()}</div>

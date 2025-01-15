@@ -6,13 +6,14 @@ const BASE_URL = "http://localhost:5000/api/items";
 /**
  * Fetch all items from the backend.
  */
-export const fetchItems = async (): Promise<Item[]> => {
+export const fetchItems = async (): Promise<any[]> => {
   try {
-    const response = await axios.get(BASE_URL);
-    return response.data.map((rawData: any) => Item.fromRawData(rawData));
+    // Sending a GET request to the backend to retrieve all items
+    const response = await axios.get("http://localhost:5000/api/items");
+    return response.data; // Returning the data received from the backend
   } catch (error) {
-    console.error("Error fetching items:", error);
-    throw new Error("Failed to fetch items.");
+    console.error("Error fetching items:", error); // Log any error that occurs
+    throw new Error("Failed to fetch items."); // Rethrow an error for the caller
   }
 };
 
