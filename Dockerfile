@@ -26,4 +26,7 @@ COPY --from=build-frontend /app/build ./public
 
 EXPOSE 5000
 
+# Expose the application port
+EXPOSE 3000
+
 CMD ["npm", "start"]
