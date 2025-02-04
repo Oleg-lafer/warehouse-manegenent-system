@@ -3,9 +3,11 @@ import { toast, ToastContainer } from "react-toastify";
 import { fetchItems, addItem, deleteItem } from "../shared/api/itemsAPI";
 import Item from "../shared/utils/Items";
 import "react-toastify/dist/ReactToastify.css";
-import "./Admin.css";
+import "./AdminStyles.css";
+import { useNavigate } from "react-router-dom";
 
 const ItemsApp: React.FC = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [newTypeName, setNewTypeName] = useState<string>("");
@@ -82,7 +84,13 @@ const ItemsApp: React.FC = () => {
   return (
     <div style={{ padding: "20px" }}>
       <ToastContainer />
-      <h1>Automated Warehouse System</h1>
+      <nav className="admin-nav">
+      <button onClick={() => navigate("/admin/dashboard")}>Dashboard</button>
+      <button onClick={() => navigate("/admin/items")}>Manage Items</button>
+      <button onClick={() => navigate("/admin/users")}>Manage Users</button>
+      <button onClick={() => navigate("/admin/actions")}>View Actions</button>
+      </nav>
+      <h1>📦 Items Management</h1>
       {isLoading && <div className="loading-spinner">Loading...</div>}
 
       <div className="form-container" style={{ display: "flex", gap: "10px", alignItems: "center", width: "100%" }}>

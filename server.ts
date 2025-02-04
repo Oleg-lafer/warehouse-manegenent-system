@@ -190,7 +190,7 @@ app.get("/api/users", (req: Request, res: Response) => {
       users.id, 
       users.name, 
       users.permission, 
-      GROUP_CONCAT(items.type_name) AS borrowed_items
+      GROUP_CONCAT(items.type_name) AS borrowedItems
     FROM users
     LEFT JOIN actions ON users.id = actions.user_id AND actions.action_type = 'borrow'
     LEFT JOIN items ON actions.item_id = items.id

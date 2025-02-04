@@ -1,0 +1,230 @@
+/* 🌟 General Page Styling */
+.dashboard-container {
+    text-align: center;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* 📊 Statistics Section */
+.stats-container {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.stat-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    min-width: 200px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.stat-box:hover {
+    transform: scale(1.05);
+}
+
+/* 🔄 Recent Actions Table */
+.action-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px auto;
+}
+
+.action-table th,
+.action-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+}
+
+.action-table th {
+    background: #007bff;
+    color: white;
+}
+
+.action-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.action-table tr:hover {
+    background: #e9e9e9;
+    transition: 0.3s ease;
+}
+
+/* 📊 Chart Container - Smaller & Styled */
+.chart-container {
+    width: 420px;  /* ✅ Set max width */
+    height: 280px;  /* ✅ Reduce height */
+    margin: 20px auto;
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Ensure chart responsiveness */
+.chart-container canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+
+/* 🛠️ Navigation Bar */
+.admin-nav {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px;
+    background: white;
+    margin-bottom: 20px;
+}
+
+.admin-nav button {
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.admin-nav button:hover {
+    background: #0056b3;
+}
+
+.admin-nav button:active {
+    transform: scale(0.95);
+}
+
+/* 🛠️ Role Selection Navigation */
+.role-nav {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px;
+    background: #f4f4f4;
+    margin-bottom: 20px;
+}
+
+.role-nav button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.role-nav button:hover {
+    background: #0056b3;
+}
+
+/* ✅ Button Effects */
+.button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.button:hover {
+    background-color: #0056b3;
+    box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.2);
+}
+
+.button:active {
+    transform: scale(0.95);
+}
+
+/* General Form Styling */
+.form-container div {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    position: relative;
+}
+
+/* User Name Input and Dropdown */
+.input {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown-item {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+/* Prevent shifting of sibling elements */
+.input,
+.select,
+.button {
+    flex-shrink: 0;
+}
+
+/* Table Styling */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th,
+.table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.table tr:hover {
+    background-color: #e9e9e9;
+    transition: background-color 0.3s ease;
+}

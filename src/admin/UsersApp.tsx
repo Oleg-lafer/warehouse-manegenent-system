@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "./Admin.css";
+import "./AdminStyles.css";
 import usersAPI, { updateUser } from "../shared/api/usersAPI";
 import User from "../shared/utils/Users";
+import { useNavigate } from "react-router-dom";
 
 const UsersApp: React.FC = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState<User>(new User(0, "", "", []));
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -99,6 +101,12 @@ const UsersApp: React.FC = () => {
   return (
     <div style={{ padding: "20px" }}>
       <ToastContainer />
+      <nav className="admin-nav">
+      <button onClick={() => navigate("/admin/dashboard")}>Dashboard</button>
+      <button onClick={() => navigate("/admin/items")}>Manage Items</button>
+      <button onClick={() => navigate("/admin/users")}>Manage Users</button>
+      <button onClick={() => navigate("/admin/actions")}>View Actions</button>
+      </nav>
       <h1>Manage Users</h1>
 
       {isLoading && <div className="loading-spinner">Loading...</div>}

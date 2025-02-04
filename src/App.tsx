@@ -1,109 +1,48 @@
-import React, { useState } from "react";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import AdminDashboard from "./admin/AdminDashboard";
 import ItemsApp from "./admin/ItemsApp";
 import UsersApp from "./admin/UsersApp";
 import ActionsApp from "./admin/ActionsApp";
 import UserDashboard from "./user/UserApp";
 
-function App() {
-  const [activeRole, setActiveRole] = useState("Admin"); // תפקיד פעיל (מנהל או משתמש)
-  const [activePage, setActivePage] = useState("Items"); // דף פעיל עבור מנהל
+const App: React.FC = () => {
+  return (
+    <Router>
+      <MainLayout />
+    </Router>
+  );
+};
 
-  const renderPage = () => {
-    if (activeRole === "Admin") {
-      // ממשק המנהל
-      switch (activePage) {
-        case "Items":
-          return <ItemsApp />;
-        case "Users":
-          return <UsersApp />;
-        case "Actions":
-          return <ActionsApp />;
-        default:
-          return <ItemsApp />;
-      }
-    } else {
-      // ממשק המשתמש
-      return <UserDashboard />;
-    }
-  };
+// 🔹 Layout with Role-Based Navigation
+const MainLayout: React.FC = () => {
+  const navigate = useNavigate();
 
   return (
     <div>
       <h1>Automated Warehouse System</h1>
 
-      {/* תפריט תפקיד */}
-      <nav
-        style={{
-          display: "flex",
-          gap: "20px",
-          padding: "10px",
-          backgroundColor: "#e8e8e8",
-        }}
-      >
-        <button
-          className="button"
-          onClick={() => setActiveRole("Admin")}
-          style={{
-            fontWeight: activeRole === "Admin" ? "bold" : "normal",
-          }}
-        >
-          Admin Panel
-        </button>
-        <button
-          className="button"
-          onClick={() => setActiveRole("User")}
-          style={{
-            fontWeight: activeRole === "User" ? "bold" : "normal",
-          }}
-        >
-          User Interface
-        </button>
+      {/* 🔹 Role Selection Navigation */}
+      <nav className="role-nav">
+        <button onClick={() => navigate("/admin/dashboard")}>Admin Panel</button>
+        <button onClick={() => navigate("/user")}>User Interface</button>
       </nav>
 
-      {activeRole === "Admin" && (
-        // תפריט ניווט למנהל
-        <nav
-          style={{
-            display: "flex",
-            gap: "20px",
-            padding: "10px",
-            backgroundColor: "#f4f4f4",
-          }}
-        >
-          <button
-            className="button"
-            onClick={() => setActivePage("Items")}
-            style={{
-              fontWeight: activePage === "Items" ? "bold" : "normal",
-            }}
-          >
-            Items
-          </button>
-          <button
-            className="button"
-            onClick={() => setActivePage("Users")}
-            style={{
-              fontWeight: activePage === "Users" ? "bold" : "normal",
-            }}
-          >
-            Users
-          </button>
-          <button
-            className="button"
-            onClick={() => setActivePage("Actions")}
-            style={{
-              fontWeight: activePage === "Actions" ? "bold" : "normal",
-            }}
-          >
-            Actions
-          </button>
-        </nav>
-      )}
+      <Routes>
+        {/* 🔹 Admin Routes */}
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/items" element={<ItemsApp />} />
+        <Route path="/admin/users" element={<UsersApp />} />
+        <Route path="/admin/actions" element={<ActionsApp />} />
 
-      {/* תוכן הדף */}
-      <div>{renderPage()}</div>
+        {/* 🔹 User Route */}
+        <Route path="/user" element={<UserDashboard />} />
+
+        {/* 🔹 Default Redirect to Dashboard */}
+        <Route path="/" element={<Navigate replace to="/admin/dashboard" />} />
+      </Routes>
     </div>
   );
-}
+};
 
 export default App;

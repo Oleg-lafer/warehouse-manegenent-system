@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "./Admin.css";
+import "./AdminStyles.css";
 import { fetchItems, updateItemStatus } from "../shared/api/itemsAPI"; 
 import { fetchUsers } from "../shared/api/usersAPI";
 import { fetchActions, addAction, deleteAction} from "../shared/api/ActionsAPI";
 import Action from "../shared/utils/Actions";
 import User from "../shared/utils/Users";
 import Item from "../shared/utils/Items";
+import { useNavigate } from "react-router-dom";
 
 const ActionsApp: React.FC = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [actions, setActions] = useState<Action[]>([]);
@@ -159,6 +161,12 @@ const ActionsApp: React.FC = () => {
   return (
     <div style={{ padding: "20px" }}>
       <ToastContainer />
+      <nav className="admin-nav">
+      <button onClick={() => navigate("/admin/dashboard")}>Dashboard</button>
+      <button onClick={() => navigate("/admin/items")}>Manage Items</button>
+      <button onClick={() => navigate("/admin/users")}>Manage Users</button>
+      <button onClick={() => navigate("/admin/actions")}>View Actions</button>
+      </nav>
       <h1>Manage Actions</h1>
 
       {isLoading && <div className="loading-spinner">Loading...</div>}

@@ -1,223 +1,144 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
+import { fetchItems, addItem, deleteItem } from "../shared/api/itemsAPI";
+import Item from "../shared/utils/Items";
 import "react-toastify/dist/ReactToastify.css";
 import "./Admin.css";
-import { fetchItems, updateItemStatus } from "../shared/api/itemsAPI"; 
-import { fetchUsers } from "../shared/api/usersAPI";
-import { fetchActions, addAction, deleteAction} from "../shared/api/ActionsAPI";
-import Action from "../shared/utils/Actions";
-import User from "../shared/utils/Users";
-import Item from "../shared/utils/Items";
 
-const ActionsApp: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+const ItemsApp: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
-  const [actions, setActions] = useState<Action[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
-  const [actionType, setActionType] = useState<string>("borrow");
-  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+  const [newItem, setNewItem] = useState<Item>(new Item(0, "", "", "", "", "available"));
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  
 
   useEffect(() => {
-    loadData();
+    loadItems();
   }, []);
 
-  useEffect(() => {
-    if (actionType === "borrow") {
-      // ✅ Show only available items
-      setFilteredItems(items.filter((item) => item.status === "available"));
-    } else if (actionType === "return" && selectedUserId) {
-      // ✅ Show only borrowed items by the selected user
-      const user = users.find((user) => user.id === selectedUserId);
-      if (user) {
-        setFilteredItems(items.filter((item) => user.borrowedItems.includes(item.type_name)));
-      }
-    }
-  }, [actionType, selectedUserId, items, users]);
-  
-
-  const loadData = async () => {
+  const loadItems = async () => {
     setIsLoading(true);
     try {
-      console.log("📡 Fetching users, items, and actions...");
-      const [usersData, itemsData, actionsData] = await Promise.all([
-        fetchUsers(),
-        fetchItems(),
-        fetchActions(),
-      ]);
-      console.log("✅ Users received:", usersData);
+      console.log("📡 Fetching items from API...");
+      const itemsData = await fetchItems();
       console.log("✅ Items received:", itemsData);
-      console.log("✅ Actions received:", actionsData);
-      setUsers(usersData);
       setItems(itemsData);
-      setActions(actionsData);
     } catch (error) {
-      toast.error("Failed to fetch data.");
-      console.error("❌ Error fetching data:", error);
+      toast.error("Failed to fetch items.");
+      console.error("❌ Error fetching items:", error);
     } finally {
       setIsLoading(false);
     }
   };
-  
-  const handleAddAction = async () => {
-    if (!selectedUserId || !selectedItemId) {
-      toast.error("Please select a user and an item.");
+
+  // Generate barcode (only when adding a new item)
+  const generateBarcode = (typeName: string, quantity: number) => {
+    const formattedName = typeName.toUpperCase().slice(0, 2); // Max 2 letters
+    const formattedQty = String(quantity).padStart(3, "0"); // 3-digit format
+    return `${formattedName}${formattedQty}`;
+  };
+
+  const handleAddItem = async () => {
+    if (!newItem.type_name) {
+      toast.error("Please enter a type name.");
       return;
     }
-  
+
     setIsLoading(true);
     try {
-      await addAction(selectedUserId, selectedItemId, actionType);
-  
-      // ✅ Fetch fresh users and items to reflect the change instantly
-      const [updatedUsers, updatedItems, updatedActions] = await Promise.all([
-        fetchUsers(),
-        fetchItems(),
-        fetchActions(),
-      ]);
-  
-      setUsers(updatedUsers);
-      setItems(updatedItems);
-      setActions(updatedActions); // Refresh action history as well
-  
-      // ✅ Reapply filtering after fetching updated data
-      if (actionType === "borrow") {
-        setFilteredItems(updatedItems.filter((item) => item.status === "available"));
-      } else if (actionType === "return") {
-        const user = updatedUsers.find((u) => u.id === selectedUserId);
-        if (user) {
-          setFilteredItems(updatedItems.filter((item) => user.borrowedItems.includes(item.type_name)));
-        }
+        // Adding new item
+        const quantity = items.filter(item => item.type_name === newItem.type_name).length + 1;
+        const barcode = generateBarcode(newItem.type_name, quantity);
+
+        const newItemData = new Item(0, newItem.type_name, newItem.type_name.toUpperCase().slice(0, 2), quantity.toString().padStart(3, "0"), barcode, "available");
+
+        console.log("📡 Adding item:", newItemData);
+        const addedItem = await addItem(newItemData);
+        setItems([...items, addedItem]);
+        toast.success("Item added successfully!");
+      } catch (error) {
+        toast.error("Failed to add item.");
+        console.error("❌ Error adding item:", error);
+      } finally {
+        setIsLoading(false);
       }
-  
-      toast.success(`Item successfully ${actionType}ed!`);
-      resetForm();
+  };
+
+
+
+  const handleDeleteItem = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    setIsLoading(true);
+    try {
+      console.log("🗑️ Deleting item with ID:", id);
+      await deleteItem(id);
+      setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+      toast.success("Item deleted successfully!");
     } catch (error) {
-      console.error("❌ Error processing action:", error);
-      toast.error(`Failed to ${actionType} item.`);
+      toast.error("Failed to delete item.");
+      console.error("❌ Error deleting item:", error);
     } finally {
       setIsLoading(false);
     }
   };
-  
-  const handleUserChange = (userId: number) => {
-    setSelectedUserId(userId);
-  
-    if (actionType === "return") {
-      const user = users.find((u) => u.id === userId);
-      if (user) {
-        setFilteredItems(items.filter((item) => user.borrowedItems.includes(item.type_name)));
-      }
-    }
-  };
-  
-  const handleDeleteAction = async (actionId: number) => {
-    if (!window.confirm("Are you sure you want to delete this action?")) return;
-  
-    setIsLoading(true);
-    try {
-      await deleteAction(actionId);
-      
-      // Remove deleted action from the state without refreshing all data
-      setActions((prevActions) => prevActions.filter(action => action.id !== actionId));
-  
-      toast.success("Action deleted successfully!");
-    } catch (error) {
-      console.error("❌ Error deleting action:", error);
-      toast.error("Failed to delete action.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
 
-
-  const resetForm = () => {
-    setSelectedUserId(null);
-    setSelectedItemId(null);
-    setActionType("borrow");
-  };
 
   return (
     <div style={{ padding: "20px" }}>
       <ToastContainer />
-      <h1>Manage Actions</h1>
-
+      <h1>Automated Warehouse System</h1>
       {isLoading && <div className="loading-spinner">Loading...</div>}
 
+      {/* Add New Item Section */}
       <div className="form-container">
-        <h2>Borrow or Return Item</h2>
-        <select
-          value={selectedUserId || ""}
-          onChange={(e) => setSelectedUserId(Number(e.target.value))}
+        <input
+          type="text"
+          placeholder="Type Name"
+          value={newItem.type_name}
+          onChange={(e) =>
+            setNewItem(
+              new Item(
+                newItem.id,
+                e.target.value,
+                newItem.type_code,
+                newItem.serial_code,
+                newItem.barcode,
+                newItem.status
+              )
+            )
+          }
           className="input"
-        >
-          <option value="">Select User</option>
-          {users.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={selectedItemId || ""}
-          onChange={(e) => setSelectedItemId(Number(e.target.value))}
-          className="input"
-        >
-          <option value="">Select Item</option>
-          {filteredItems.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.type_name} ({item.status})
-            </option>
-          ))}
-        </select>
-
-
-        <select
-          value={actionType}
-          onChange={(e) => setActionType(e.target.value)}
-          className="input"
-        >
-          <option value="borrow">Borrow</option>
-          <option value="return">Return</option>
-        </select>
-
-        <button onClick={handleAddAction} className="button">
-          Submit Action
-        </button>
+        />
       </div>
 
+      {/* Items Table */}
       <table className="table">
         <thead>
           <tr>
-            <th>User</th>
-            <th>Item</th>
-            <th>Action</th>
-            <th>Timestamp</th>
-            <th>Actions</th> {/* New column for delete button */}
+            <th>Type Name</th>
+            <th>Type Code</th>
+            <th>Serial Code</th>
+            <th>Barcode</th>
+            <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {actions.map((action) => (
-            <tr key={action.id}>
-              <td>{action.user_name}</td>
-              <td>{action.item_name}</td>
-              <td>{action.action_type}</td>
-              <td>{new Date(action.timestamp).toLocaleString()}</td>
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td>{item.type_name}</td>
+              <td>{item.type_code}</td>
+              <td>{item.serial_code}</td>
+              <td>{item.barcode}</td>
+              <td>{item.status}</td>
               <td>
-                <button onClick={() => handleDeleteAction(action.id)} className="button delete-button">
-                  ❌ Delete
-                </button>
+                <button onClick={() => handleDeleteItem(item.id)} className="button delete-button">❌ Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-
     </div>
   );
 };
 
-export default ActionsApp;
+export default ItemsApp;
