@@ -1,125 +1,100 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
-import { fetchItems, addItem, updateItem, deleteItem } from "../shared/api/itemsAPI";
+import { fetchItems, addItem, deleteItem } from "../shared/api/itemsAPI";
 import Item from "../shared/utils/Items";
 import "react-toastify/dist/ReactToastify.css";
 import "./Admin.css";
 
 const ItemsApp: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
-  const [newTypeName, setNewTypeName] = useState<string>("");
-  const [editIndex, setEditIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [newTypeName, setNewTypeName] = useState<string>("");
 
-  // Fetch items from the backend when the component loads
   useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const items = await fetchItems();
-        setItems(items);
-      } catch (error) {
-        toast.error("Failed to load items.");
-      }
-    };
-
     loadItems();
   }, []);
 
-  // Generate a serial code based on the number of items with the same type_name
-  const generateSerialCode = (type_name: string): string => {
-    const sameTypeItems = items.filter((item) => item.type_name === type_name);
-    return (sameTypeItems.length + 1).toString().padStart(3, "0"); // Ensure 3 digits
+  const loadItems = async () => {
+    setIsLoading(true);
+    try {
+      console.log("📡 Fetching items from API...");
+      const itemsData = await fetchItems();
+      console.log("✅ Items received:", itemsData);
+      setItems(itemsData);
+    } catch (error) {
+      toast.error("Failed to fetch items.");
+      console.error("❌ Error fetching items:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Handle adding a new item
+  const generateBarcode = (typeName: string, quantity: number) => {
+    const formattedName = typeName.toUpperCase().slice(0, 2);
+    const formattedQty = String(quantity).padStart(3, "0");
+    return `${formattedName}${formattedQty}`;
+  };
+
   const handleAddItem = async () => {
-    if (!newTypeName) {
-      toast.error("Type name is required.");
+    if (!newTypeName.trim()) {
+      toast.error("Please enter a type name.");
       return;
     }
 
-    const typeCode = newTypeName.slice(0, 2).toUpperCase();
-    const serialCode = generateSerialCode(newTypeName);
-    const newItem = new Item(newTypeName, typeCode, serialCode, `${typeCode}${serialCode}`);
-
+    setIsLoading(true);
     try {
-      const addedItem = await addItem(newItem);
+      const quantity = items.filter(item => item.type_name === newTypeName).length + 1;
+      const barcode = generateBarcode(newTypeName, quantity);
+
+      const newItemData = new Item(0, newTypeName, newTypeName.toUpperCase().slice(0, 2), quantity.toString().padStart(3, "0"), barcode, "available");
+
+      console.log("📡 Adding item:", newItemData);
+      const addedItem = await addItem(newItemData);
       setItems((prevItems) => [...prevItems, addedItem]);
+
       setNewTypeName("");
+
       toast.success("Item added successfully!");
-    } catch {
+    } catch (error) {
       toast.error("Failed to add item.");
+      console.error("❌ Error adding item:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Handle editing an item
-  const handleEditItem = (index: number) => {
-    setEditIndex(index);
-    setNewTypeName(items[index]?.type_name || "");
-  };
-
-  const handleSaveItem = async () => {
-    if (editIndex === null) return;
-
-    const itemToUpdate = items[editIndex];
-    const updatedItem = new Item(
-      newTypeName,
-      itemToUpdate.type_code,
-      itemToUpdate.serial_code,
-      `${itemToUpdate.type_code}${itemToUpdate.serial_code}`
-    );
-
+  const handleDeleteItem = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    setIsLoading(true);
     try {
-      const savedItem = await updateItem(itemToUpdate.type_code, updatedItem);
-      const updatedItems = [...items];
-      updatedItems[editIndex] = savedItem;
-      setItems(updatedItems);
-      setEditIndex(null);
-      setNewTypeName("");
-      toast.success("Item updated successfully!");
-    } catch {
-      toast.error("Failed to update item.");
-    }
-  };
-
-  // Handle deleting an item
-  const handleDeleteItem = async (index: number) => {
-    const itemToDelete = items[index];
-    if (!itemToDelete) return;
-
-    try {
-      await deleteItem(itemToDelete.type_code);
-      setItems(items.filter((_, i) => i !== index));
+      console.log("🗑️ Deleting item with ID:", id);
+      await deleteItem(id);
+      setItems((prevItems) => prevItems.filter((item) => item.id !== id));
       toast.success("Item deleted successfully!");
-    } catch {
+    } catch (error) {
       toast.error("Failed to delete item.");
+      console.error("❌ Error deleting item:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div style={{ padding: "20px" }}>
       <ToastContainer />
-      <h1>Manage Items</h1>
-
+      <h1>Automated Warehouse System</h1>
       {isLoading && <div className="loading-spinner">Loading...</div>}
-      <div className="form-container">
-        <h2>{editIndex === null ? "Add New Item" : "Edit Item"}</h2>
+
+      <div className="form-container" style={{ display: "flex", gap: "10px", alignItems: "center", width: "100%" }}>
         <input
           type="text"
           placeholder="Type Name"
           value={newTypeName}
           onChange={(e) => setNewTypeName(e.target.value)}
           className="input"
+          style={{ flex: "1", maxWidth: "300px" }}
         />
-        {editIndex === null ? (
-          <button onClick={handleAddItem} className="button">
-            Add Item
-          </button>
-        ) : (
-          <button onClick={handleSaveItem} className="button">
-            Save Changes
-          </button>
-        )}
+        <button onClick={handleAddItem} className="button">➕ Add Item</button>
       </div>
 
       <table className="table">
@@ -129,29 +104,20 @@ const ItemsApp: React.FC = () => {
             <th>Type Code</th>
             <th>Serial Code</th>
             <th>Barcode</th>
-            <th>Status</th> 
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {items.map((item, index) => (
-            <tr key={index}>
+          {items.map((item) => (
+            <tr key={item.id}>
               <td>{item.type_name}</td>
               <td>{item.type_code}</td>
               <td>{item.serial_code}</td>
               <td>{item.barcode}</td>
-              <td>{item.status}</td> 
+              <td>{item.status}</td>
               <td>
-                <button onClick={() => handleEditItem(index)} className="button">
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteItem(index)}
-                  className="button"
-                  style={{ color: "red" }}
-                >
-                  Delete
-                </button>
+                <button onClick={() => handleDeleteItem(item.id)} className="button delete-button">❌ Delete</button>
               </td>
             </tr>
           ))}
@@ -162,3 +128,4 @@ const ItemsApp: React.FC = () => {
 };
 
 export default ItemsApp;
+

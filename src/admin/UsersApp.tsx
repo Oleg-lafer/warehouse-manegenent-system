@@ -2,26 +2,16 @@ import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./Admin.css";
-
-interface User {
-  id?: number; // ID של המשתמש לשם עריכה ומחיקה
-  name: string; // שם המשתמש
-  permission: string; // הרשאת המשתמש (Admin, User וכו')
-  borrowedItems: string; // רשימת פריטים מושאלים
-}
+import usersAPI, { updateUser } from "../shared/api/usersAPI";
+import User from "../shared/utils/Users";
 
 const UsersApp: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [newUser, setNewUser] = useState<User>({
-    name: "",
-    permission: "",
-    borrowedItems: "none",
-  });
+  const [newUser, setNewUser] = useState<User>(new User(0, "", "", []));
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // שליפת נתוני המשתמשים מהשרת
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -29,18 +19,8 @@ const UsersApp: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/users");
-      const data = await response.json();
-
-      // מיפוי השדה borrowed_items ל-borrowedItems
-      const normalizedUsers = data.map((user: any) => ({
-        id: user.id,
-        name: user.name,
-        permission: user.permission,
-        borrowedItems: user.borrowed_items || "none", // ברירת מחדל אם אין פריטים מושאלים
-      }));
-
-      setUsers(normalizedUsers);
+      const usersData = await usersAPI.fetchUsers();
+      setUsers(usersData);
     } catch (error) {
       toast.error("Failed to fetch users.");
     } finally {
@@ -56,14 +36,9 @@ const UsersApp: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUser),
-      });
-      const addedUser = await response.json();
+      const addedUser = await usersAPI.addUser(newUser);
       setUsers([...users, addedUser]);
-      setNewUser({ name: "", permission: "", borrowedItems: "none" });
+      setNewUser(new User(0, "", "", []));
       toast.success("User added successfully!");
     } catch {
       toast.error("Failed to add user.");
@@ -73,18 +48,12 @@ const UsersApp: React.FC = () => {
   };
 
   const handleDeleteUser = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        setUsers(users.filter((user) => user.id !== id));
-        toast.success("User deleted successfully!");
-      } else {
-        toast.error("Failed to delete user.");
-      }
+      await usersAPI.deleteUser(id);
+      setUsers(users.filter((user) => user.id !== id));
+      toast.success("User deleted successfully!");
     } catch {
       toast.error("Failed to delete user.");
     } finally {
@@ -94,38 +63,34 @@ const UsersApp: React.FC = () => {
 
   const handleSaveUser = async () => {
     if (editIndex === null) return;
-
+  
     const userToUpdate = users[editIndex];
     if (!userToUpdate?.id) {
       toast.error("User ID not found for update.");
       return;
     }
-
+  
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${userToUpdate.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUser),
-      });
-
-      if (response.ok) {
-        const updatedUser = await response.json();
-        const updatedUsers = [...users];
-        updatedUsers[editIndex] = updatedUser;
-        setUsers(updatedUsers);
-        setEditIndex(null);
-        setNewUser({ name: "", permission: "", borrowedItems: "none" });
-        toast.success("User updated successfully!");
-      } else {
-        toast.error("Failed to update user.");
-      }
+      console.log(`📡 Updating user ${userToUpdate.id}...`);
+  
+      const updatedUser = await updateUser(userToUpdate.id, newUser);
+  
+      // Update state
+      const updatedUsers = [...users];
+      updatedUsers[editIndex] = updatedUser;
+      setUsers(updatedUsers);
+  
+      setEditIndex(null);
+      setNewUser(new User(0, "", "", []));
+      toast.success("User updated successfully!");
     } catch {
       toast.error("Failed to update user.");
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -144,71 +109,80 @@ const UsersApp: React.FC = () => {
           type="text"
           placeholder="User Name"
           value={newUser.name}
-          onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+          onChange={(e) =>
+            setNewUser(new User(newUser.id, e.target.value, newUser.permission, newUser.borrowedItems))
+          }
           className="input"
         />
         <select
           value={newUser.permission}
-          onChange={(e) => setNewUser({ ...newUser, permission: e.target.value })}
+          onChange={(e) =>
+            setNewUser(new User(newUser.id, newUser.name, e.target.value, newUser.borrowedItems))
+          }
           className="input"
         >
-          <option value="">Permission</option>
+          <option value="">Select Permission</option>
           <option value="Admin">Admin</option>
           <option value="Developer">Developer</option>
           <option value="User">User</option>
         </select>
         {editIndex === null ? (
-          <button onClick={handleAddUser} className="button">
-            Add User
-          </button>
+          <button onClick={handleAddUser} className="button">Add User</button>
         ) : (
-          <button onClick={handleSaveUser} className="button">
-            Save Changes
-          </button>
+          <button onClick={handleSaveUser} className="button">Save Changes</button>
         )}
       </div>
 
-      <div style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          placeholder="Search by name"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-      </div>
+      <input
+        type="text"
+        placeholder="Search Users..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="input"
+        style={{ marginBottom: "10px" }}
+      />
 
       <table className="table">
-        <thead>
-          <tr>
-            <th>User Name</th>
-            <th>Permission</th>
-            <th>Borrowed Items</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredUsers.map((user, index) => (
-            <tr key={user.id}>
-              <td>{user.name}</td>
-              <td>{user.permission}</td>
-              <td>{user.borrowedItems}</td> {/* מציג את הפריטים המושאלים */}
-              <td>
-                <button onClick={() => setEditIndex(index)} className="button">
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteUser(user.id!)}
-                  className="button"
-                  style={{ color: "red" }}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Permission</th>
+                  <th>Borrowed Items</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user, index) => (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.name}</td>
+                    <td>{user.permission}</td>
+                    <td>
+                      {Array.isArray(user.borrowedItems) && user.borrowedItems.length > 0 ? (
+                        <ul>
+                          {user.borrowedItems.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        "No borrowed items"
+                      )}
+                    </td>
+                    <td>
+                      <button onClick={() => setEditIndex(index)} className="button">Edit</button>
+                      <button 
+                        onClick={() => handleDeleteUser(user.id)} 
+                        className="button delete-button"
+                      >
+                        ❌ Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
     </div>
   );
 };

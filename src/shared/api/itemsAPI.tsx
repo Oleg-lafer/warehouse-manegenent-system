@@ -6,14 +6,18 @@ const BASE_URL = "http://localhost:5000/api/items";
 /**
  * Fetch all items from the backend.
  */
-export const fetchItems = async (): Promise<any[]> => {
+export const fetchItems = async (): Promise<Item[]> => {
   try {
-    // Sending a GET request to the backend to retrieve all items
-    const response = await axios.get("http://localhost:5000/api/items");
-    return response.data; // Returning the data received from the backend
+    console.log("📡 Fetching items from API...");
+    const response = await axios.get(BASE_URL);
+    
+    // Debug log to confirm API data is being received
+    console.log("✅ API Response:", response.data);
+
+    return response.data.map((item: any) => new Item(item.id, item.type_name, item.type_code, item.serial_code, item.barcode, item.status));
   } catch (error) {
-    console.error("Error fetching items:", error); // Log any error that occurs
-    throw new Error("Failed to fetch items."); // Rethrow an error for the caller
+    console.error("❌ Error fetching items:", error);
+    throw new Error("Failed to fetch items.");
   }
 };
 
@@ -22,33 +26,36 @@ export const fetchItems = async (): Promise<any[]> => {
  */
 export const addItem = async (item: Item): Promise<Item> => {
   try {
-    const response = await axios.post(BASE_URL, item.toJSON());
-    return Item.fromRawData(response.data);
+    const { id, ...itemWithoutId } = item;
+    const response = await axios.post(BASE_URL, itemWithoutId);
+    return response.data;
   } catch (error) {
     console.error("Error adding item:", error);
     throw new Error("Failed to add item.");
   }
 };
 
-/**
- * Update an item on the backend.
- */
-export const updateItem = async (type_code: string, item: Item): Promise<Item> => {
+export const updateItemStatus = async (id: number, status: string): Promise<void> => {
   try {
-    const response = await axios.put(`${BASE_URL}/${type_code}`, item.toJSON());
-    return Item.fromRawData(response.data);
+    console.log(`📡 Updating item ${id} status to ${status}...`);
+
+    await axios.put(`http://localhost:5000/api/items/${id}`, { status });
+
+    console.log(`✅ Item ${id} status updated to ${status}`);
   } catch (error) {
-    console.error("Error updating item:", error);
-    throw new Error("Failed to update item.");
+    console.error("❌ Error updating item status:", error);
+    throw new Error("Failed to update item status.");
   }
 };
+
+
 
 /**
  * Delete an item from the backend.
  */
-export const deleteItem = async (type_code: string): Promise<void> => {
+export const deleteItem = async (id: number): Promise<void> => {
   try {
-    await axios.delete(`${BASE_URL}/${type_code}`);
+    await axios.delete(`${BASE_URL}/${id}`);
   } catch (error) {
     console.error("Error deleting item:", error);
     throw new Error("Failed to delete item.");

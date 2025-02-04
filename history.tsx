@@ -24,27 +24,17 @@ const ActionsApp: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    console.log("🔍 Users:", users);
-    console.log("🔍 Items:", items);
-    console.log("🔍 Selected User:", selectedUserId);
-  
     if (actionType === "borrow") {
-      console.log("📌 Filtering available items...");
+      // ✅ Show only available items
       setFilteredItems(items.filter((item) => item.status === "available"));
     } else if (actionType === "return" && selectedUserId) {
-      console.log("📌 Filtering borrowed items...");
+      // ✅ Show only borrowed items by the selected user
       const user = users.find((user) => user.id === selectedUserId);
       if (user) {
-        console.log("📦 User Borrowed Items:", user.borrowedItems);
         setFilteredItems(items.filter((item) => user.borrowedItems.includes(item.type_name)));
-      } else {
-        setFilteredItems([]);
       }
     }
   }, [actionType, selectedUserId, items, users]);
-  
-  
-  
   
 
   const loadData = async () => {
@@ -111,23 +101,16 @@ const ActionsApp: React.FC = () => {
     }
   };
   
-  
   const handleUserChange = (userId: number) => {
     setSelectedUserId(userId);
   
     if (actionType === "return") {
       const user = users.find((u) => u.id === userId);
       if (user) {
-        console.log("📦 User Borrowed Items:", user.borrowedItems); // Debugging
         setFilteredItems(items.filter((item) => user.borrowedItems.includes(item.type_name)));
-      } else {
-        setFilteredItems([]);
       }
     }
   };
-  
-  
-  
   
   const handleDeleteAction = async (actionId: number) => {
     if (!window.confirm("Are you sure you want to delete this action?")) return;
@@ -167,7 +150,7 @@ const ActionsApp: React.FC = () => {
         <h2>Borrow or Return Item</h2>
         <select
           value={selectedUserId || ""}
-          onChange={(e) => handleUserChange(Number(e.target.value))} // ✅ Now it filters items
+          onChange={(e) => setSelectedUserId(Number(e.target.value))}
           className="input"
         >
           <option value="">Select User</option>
@@ -190,8 +173,6 @@ const ActionsApp: React.FC = () => {
             </option>
           ))}
         </select>
-
-
 
 
         <select

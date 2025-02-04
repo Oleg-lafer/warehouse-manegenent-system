@@ -147,6 +147,23 @@ app.post("/api/items", (req: Request, res: Response) => {
   );
 });
 
+app.put("/api/items/:id", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    console.log(`🔍 SQL: UPDATE items SET status = '${status}' WHERE id = ${id}`);
+
+    await db.run("UPDATE items SET status = ? WHERE id = ?", [status, id]);
+
+    res.json({ message: `✅ Item ${id} updated to status ${status}` });
+  } catch (error) {
+    console.error("❌ Error updating item status:", error);
+    res.status(500).json({ error: "Failed to update item status." });
+  }
+});
+
+
 
 // Delete an item by type_code
 app.delete("/api/items/:type_code", (req: Request, res: Response) => {
@@ -213,6 +230,30 @@ app.post("/api/users", (req: Request, res: Response) => {
   );
 });
 
+app.put("/api/users/:id", async (req, res) => {
+  const { id } = req.params;
+  const { name, permission, borrowedItems } = req.body;
+
+  try {
+    console.log(`📡 Updating user ${id}...`);
+
+    // Ensure borrowedItems is a string (for SQLite) or JSON (for other DBs)
+    const borrowedItemsValue = Array.isArray(borrowedItems) ? borrowedItems.join(",") : borrowedItems;
+
+    await db.run(
+      "UPDATE users SET name = ?, permission = ?, borrowedItems = ? WHERE id = ?",
+      [name, permission, borrowedItemsValue, id]
+    );
+
+    console.log(`✅ User ${id} updated successfully.`);
+    res.json({ message: `User ${id} updated successfully.` });
+  } catch (error) {
+    console.error("❌ Error updating user:", error);
+    res.status(500).json({ error: "Failed to update user." });
+  }
+});
+
+
 // Delete a user by ID
 app.delete("/api/users/:id", (req: Request, res: Response) => {
   const { id } = req.params;
@@ -273,21 +314,8 @@ app.post("/api/actions", (req: Request, res: Response) => {
         console.error("Error adding action:", err.message);
         res.status(500).send("Internal server error");
       } else {
-        // Update item status based on action type
-        const newStatus = action_type === "borrow" ? "borrowed" : "available";
-
-        db.run(
-          "UPDATE items SET status = ? WHERE id = ?",
-          [newStatus, item_id],
-          (updateErr) => {
-            if (updateErr) {
-              console.error("Error updating item status:", updateErr.message);
-              res.status(500).send("Internal server error");
-            } else {
-              res.status(201).json({ id: this.lastID, user_id, item_id, action_type, timestamp });
-            }
-          }
-        );
+        console.log(`✅ Action ${action_type} recorded for item ${item_id}`);
+        res.status(201).json({ id: this.lastID, user_id, item_id, action_type, timestamp });
       }
     }
   );
