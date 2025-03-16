@@ -1,70 +1,85 @@
-# Getting Started with Create React App
+# Warehouse Management System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Overview
+The **Warehouse Management System** is a full-stack application built from scratch using **TypeScript**, **React**, and **Node.js**. It serves as an **information management system** for warehouses, handling products, users, and operational processes.
 
-## Available Scripts
+The system is designed to run on a **Raspberry Pi**, which acts as the central unit for warehouse management. Future enhancements include **image processing** and **voice recognition** to enable hands-free operation.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Features
+- **User Management**: Register, authenticate, and manage users with different roles.
+- **Product Management**: Add, update, and track inventory in real time.
+- **Operations Management**: Log and monitor warehouse activities.
+- **Raspberry Pi Integration**: The system runs on a Raspberry Pi, making it portable and efficient.
+- **Future Enhancements**:
+  - **Image Processing**: A camera module will be connected to the Raspberry Pi to recognize and track products using a custom-built model.
+  - **Voice Commands**: A microphone will be integrated to allow voice-based interaction with the system.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Tech Stack
+### Backend:
+- **Node.js** (with Express.js for API handling)
+- **TypeScript**
+- **SQLite / PostgreSQL** (for database management)
 
-### `npm test`
+### Frontend:
+- **React.js** (TypeScript-based)
+- **Redux** (for state management)
+- **TailwindCSS** (for styling)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Hardware:
+- **Raspberry Pi** (Primary computing device)
+- **Camera Module** (Future integration for image recognition)
+- **Microphone Module** (Planned for voice recognition)
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Installation & Setup
+### Prerequisites:
+- Node.js & npm installed
+- Raspberry Pi (for hardware integration)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Steps:
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-repo/warehouse-management-system.git
+   cd warehouse-management-system
+   ```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+3. **Start the backend server**
+   ```bash
+   cd backend
+   npm run dev
+   ```
+4. **Start the frontend**
+   ```bash
+   cd frontend
+   npm start
+   ```
+5. **Deploy on Raspberry Pi**
+   - Follow Raspberry Pi setup instructions.
+   - Run the backend as a service.
+   - Connect the frontend to a local network.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## Future Development
+- **Train and integrate an image recognition model** for automated product identification.
+- **Implement voice command features** using speech-to-text processing.
+- **Enhance the UI/UX** for improved user experience.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Contributors
+- Daniel Dahan
+- Oleg Lafer Muraviov
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+For suggestions or contributions, feel free to open an issue or submit a pull request.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
