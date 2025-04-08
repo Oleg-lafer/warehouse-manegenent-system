@@ -1,9 +1,9 @@
 # Warehouse Manegenent System
 
-![Image 1](Photos_demo/1.jpeg =25%)
-![Image 2](Photos_demo/2.jpeg =25%x)
-![Image 3](Photos_demo/3.jpeg =25%x)
-![Image 4](Photos_demo/4.jpeg =25%x)
+<img src="Photos_demo/1.jpeg" width="25%">
+<img src="Photos_demo/2.jpeg" width="25%">
+<img src="Photos_demo/3.jpeg" width="25%">
+<img src="Photos_demo/4.jpeg" width="25%">
 
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
