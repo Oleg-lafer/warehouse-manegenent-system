@@ -1,9 +1,10 @@
 # Warehouse Manegenent System
 
-![Image 1](Photos_demo/1.jpeg)
-![Image 2](Photos_demo/2.jpeg)
-![Image 3](Photos_demo/3.jpeg)
-![Image 4](Photos_demo/4.jpeg)
+![Image 1](Photos_demo/1.jpeg =25%x)
+![Image 2](Photos_demo/2.jpeg =25%x)
+![Image 3](Photos_demo/3.jpeg =25%x)
+![Image 4](Photos_demo/4.jpeg =25%x)
+
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
